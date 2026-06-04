@@ -2,6 +2,8 @@
 
 Personal mpv configuration for Linux (Wayland/Vulkan) and Windows.
 
+`mpv.conf` uses Trebuchet MS for subtitles and OSD. To use it, create a `fonts/` folder in your mpv config directory and place `trebuc.ttf` in it.
+
 ## Third-party scripts
 
 | Script | Source | License |
