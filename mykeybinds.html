@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mpv config reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #0e0e0e;
+  --bg1:   #161616;
+  --bg2:   #1e1e1e;
+  --line:  #2a2a2a;
+  --line2: #333;
+  --text:  #d4d4d4;
+  --dim:   #666;
+  --dim2:  #444;
+  --hi:    #c8a165;
+  --hi2:   #6b9fce;
+  --hi3:   #7ab87a;
+  --hi4:   #b07fc8;
+  --hi5:   #c87070;
+  --mono:  'IBM Plex Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── layout ── */
+.shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ── sidebar ── */
+nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--bg1);
+  border-right: 1px solid var(--line);
+  padding: 24px 0 32px;
+  flex-shrink: 0;
+}
+
+.nav-logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.nav-logo .title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hi);
+}
+
+.nav-logo .sub {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
+.nav-search {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+
+.nav-search input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  outline: none;
+}
+
+.nav-search input::placeholder { color: var(--dim2); }
+.nav-search input:focus { border-color: var(--dim); }
+
+nav a {
+  display: block;
+  padding: 4px 20px;
+  font-size: 11px;
+  color: var(--dim);
+  text-decoration: none;
+  transition: color 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+nav a:hover { color: var(--text); }
+nav a.active { color: var(--hi); }
+
+.nav-group {
+  margin-top: 14px;
+  padding: 0 20px 4px;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dim2);
+}
+
+.nav-ext {
+  padding: 12px 20px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+}
+
+.nav-ext a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 10px;
+  color: var(--dim);
+  text-decoration: none;
+}
+
+.nav-ext a:hover { color: var(--hi2); }
+
+.nav-ext svg { flex-shrink: 0; }
+
+/* ── main ── */
+main {
+  padding: 48px 56px 80px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+/* ── search highlight ── */
+.search-hidden { display: none !important; }
+mark {
+  background: #3a3010;
+  color: var(--hi);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* ── header ── */
+.page-header { margin-bottom: 52px; }
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+
+.page-header .meta {
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.page-header .meta a {
+  color: var(--hi2);
+  text-decoration: none;
+  margin-right: 16px;
+}
+
+.page-header .meta a:hover { text-decoration: underline; }
+
+/* ── section ── */
+.section { margin-bottom: 48px; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-head:hover h2 { color: var(--text); }
+
+.section-head h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #aaa;
+  transition: color 0.1s;
+  flex: 1;
+}
+
+.section-head .src {
+  font-size: 10px;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.chevron {
+  color: var(--dim2);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.section.collapsed .chevron { transform: rotate(-90deg); }
+.section.collapsed .section-body { display: none; }
+
+/* ── table ── */
+.t {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.t tr { border-bottom: 1px solid var(--line); }
+.t tr:last-child { border-bottom: none; }
+.t tr:hover td { background: var(--bg1); }
+
+.t td {
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.t .col-key {
+  width: 240px;
+  padding-right: 24px;
+}
+
+/* ── keys ── */
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+
+kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  color: var(--text);
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  position: relative;
+}
+
+kbd:hover { background: #2a2a2a; border-color: #555; }
+
+kbd.copied::after {
+  content: 'copied';
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  color: var(--hi3);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+kbd.mod       { background: #1c1c24; border-color: #383850; color: var(--hi2); }
+kbd.fn-key    { background: #1c241c; border-color: #385038; color: var(--hi3); }
+kbd.media-key { background: #241c14; border-color: #503820; color: var(--hi);  }
+
+.plus { color: var(--dim2); font-size: 10px; margin: 0 1px; }
+
+/* ── copy button on key row ── */
+.copy-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--line2);
+  border-radius: 3px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.t tr:hover .copy-btn { display: inline-block; }
+.copy-btn:hover { color: var(--text); border-color: var(--dim); }
+.copy-btn.copied { color: var(--hi3); border-color: var(--hi3); }
+
+/* ── descriptions ── */
+.desc-main { color: var(--text); }
+
+.desc-detail {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.conflict {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 2px;
+  margin-left: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  background: #2a1a1a;
+  color: var(--hi5);
+  border: 1px solid #4a2a2a;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+  margin-left: 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+.tag-c { background: #1a2230; color: var(--hi2); border: 1px solid #223244; }
+.tag-t { background: #221a14; color: var(--hi);  border: 1px solid #443020; }
+
+/* ── opts table ── */
+.opts-t { width: 100%; border-collapse: collapse; }
+.opts-t tr { border-bottom: 1px solid var(--line); }
+.opts-t tr:last-child { border-bottom: none; }
+.opts-t tr:hover td { background: var(--bg1); }
+.opts-t td { padding: 8px 12px; vertical-align: top; }
+.opts-t .col-opt { width: 240px; color: var(--hi3); white-space: nowrap; font-size: 11px; }
+.opts-t .col-val { width: 150px; color: var(--hi); font-size: 11px; }
+.opts-t .col-about { color: var(--dim); font-size: 11px; }
+
+/* ── click label ── */
+.click-label {
+  font-size: 10px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px 4px;
+}
+
+/* ── misc ── */
+.rule { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+
+.note-block {
+  font-size: 10px;
+  color: var(--dim);
+  margin-top: 8px;
+  padding-left: 12px;
+  font-style: italic;
+}
+
+.bg-label {
+  font-size: 11px;
+  color: var(--hi3);
+  white-space: nowrap;
+}
+
+/* ── intro box ── */
+.intro-box {
+  margin-bottom: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.intro-personal {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--bg1);
+  font-size: 11px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--line);
+  line-height: 1.6;
+}
+
+.intro-personal a { color: var(--hi2); text-decoration: none; }
+.intro-personal a:hover { text-decoration: underline; }
+
+.intro-legend {
+  padding: 14px 16px;
+  background: var(--bg);
+}
+
+.legend-title {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--dim2);
+  margin-bottom: 10px;
+}
+
+.legend-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.legend-item > *:first-child { flex-shrink: 0; }
+
+.no-results {
+  display: none;
+  color: var(--dim);
+  font-size: 12px;
+  padding: 32px 12px;
+  font-style: italic;
+}
+
+@media (max-width: 700px) {
+  .shell { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; }
+  main { padding: 24px 20px 60px; }
+  .t .col-key { width: 160px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav>
+  <div class="nav-logo">
+    <div class="title">personal mpv config</div>
+    <div class="sub">hopefully it's useful :3</div>
+  </div>
+  <div class="nav-search">
+    <input type="text" id="search" placeholder="search shortcuts…" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="nav-group">shortcuts</div>
+  <a href="#playback">playback</a>
+  <a href="#playlist">playlist</a>
+  <a href="#subs">subtitles</a>
+  <a href="#anime">anime profile</a>
+  <a href="#shaders">shaders</a>
+  <a href="#video">video</a>
+  <a href="#audio">audio</a>
+  <a href="#filebrowser">file-browser</a>
+  <a href="#clipboard">clipboard</a>
+  <a href="#profiles">profiles / clock</a>
+  <a href="#bgscripts">background scripts</a>
+  <a href="#osc">OSC buttons</a>
+  <a href="#overrides">overridden defaults</a>
+  <div class="nav-group">config</div>
+  <a href="#opts-osc">osc.conf</a>
+  <a href="#opts-autoload">autoload.conf</a>
+  <a href="#opts-fb">file_browser.conf</a>
+  <a href="#opts-recent">recent.conf</a>
+  <a href="#opts-crop">crop.conf</a>
+  <a href="#opts-subsel">sub_select.conf</a>
+  <a href="#opts-subpath">sub_path_config</a>
+  <a href="#opts-mpv">mpv.conf</a>
+  <div class="nav-ext">
+    <a href="https://mpv.io/manual/master/#keyboard-control" target="_blank">
+      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7 1h4v4M11 1L5 7M2 3H1v8h8V9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      mpv default keybinds
+    </a>
+    <a href="https://mpv.io/manual/master/" target="_blank">
+      <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7 1h4v4M11 1L5 7M2 3H1v8h8V9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      mpv manual
+    </a>
+  </div>
+</nav>
+
+<main>
+
+  <div class="page-header">
+    <h1>mpv reference</h1>
+    <div class="meta">
+      <a href="https://mpv.io/manual/master/#keyboard-control" target="_blank">default keybinds ↗</a>
+      <a href="https://mpv.io/manual/master/" target="_blank">mpv manual ↗</a>
+    </div>
+  </div>
+
+  <div class="intro-box">
+    <div class="intro-personal">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M6 5v4M6 3.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      These are personal keybinds — some keys differ from mpv defaults or are unique to installed scripts. If something doesn't work, check <a href="https://mpv.io/manual/master/#keyboard-control" target="_blank">mpv's default keybinds</a> and compare. Keys marked <span class="conflict" style="margin:0 2px">reassigned</span> have had their default behaviour replaced.
+    </div>
+    <div class="intro-legend">
+      <span class="legend-title">how to read this</span>
+      <div class="legend-grid">
+        <div class="legend-item">
+          <span class="tag tag-c" style="margin:0">cycles</span>
+          <span>press repeatedly to step through options; one more press turns it off</span>
+        </div>
+        <div class="legend-item">
+          <span class="tag tag-t" style="margin:0">toggle</span>
+          <span>on/off with the same key</span>
+        </div>
+        <div class="legend-item">
+          <span class="conflict" style="margin:0">reassigned</span>
+          <span>this key had a different default behaviour in mpv</span>
+        </div>
+        <div class="legend-item">
+          <kbd style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg2);border:1px solid var(--line2);color:var(--text)">Key</kbd>
+          <span>hover a row to reveal a copy button — click it to copy the key string to clipboard</span>
+        </div>
+        <div class="legend-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>click any section header to collapse or expand it</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="no-results" class="no-results">No results found.</div>
+
+  <!-- PLAYBACK -->
+  <div class="section" id="playback">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Playback &amp; Navigation</h2>
+      <span class="src">skip-intro.lua · restart_playlist.lua · input.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll ↑</kbd><button class="copy-btn" onclick="copyKey(this,'Scroll ↑')">copy</button></div></td>
+        <td><span class="desc-main">Seek forward 10 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll ↓</kbd><button class="copy-btn" onclick="copyKey(this,'Scroll ↓')">copy</button></div></td>
+        <td><span class="desc-main">Seek backward 10 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll →</kbd><button class="copy-btn" onclick="copyKey(this,'Scroll →')">copy</button></div></td>
+        <td><span class="desc-main">Volume +2.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll ←</kbd><button class="copy-btn" onclick="copyKey(this,'Scroll ←')">copy</button></div></td>
+        <td><span class="desc-main">Volume −2.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>Tab</kbd><button class="copy-btn" onclick="copyKey(this,'Shift+Tab')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Skip to next silence gap.</span>
+          <span class="desc-detail">Intended for skipping show intros — most have a silence gap at the end before the episode starts. Detects silence (threshold −30dB, min 0.5s), speeds to 100× and blackouts video. Jumps to the next audio. Press again mid-skip to cancel and return to where skip began; once it has already jumped it just stops at the new position.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="media-key">Media Next</kbd><button class="copy-btn" onclick="copyKey(this,'NEXT')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Next track, or restart playlist if at end / only 1 item.</span>
+          <span class="desc-detail">Unpauses after jump. Handles the edge case where mpv would otherwise stop at EOF with a single-file playlist.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- PLAYLIST -->
+  <div class="section" id="playlist">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Playlist</h2>
+      <span class="src">playlistorder.lua · recent.lua · input.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>L</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+Alt+l')">copy</button></div></td>
+        <td><span class="desc-main">Show current playlist on OSD for 3 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>L</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+l')">copy</button></div></td>
+        <td><span class="desc-main">Toggle playlist loop: infinite ↔ off. <span class="tag tag-t">toggle</span></span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>K</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+k')">copy</button></div></td>
+        <td><span class="desc-main">Shuffle playlist, then show it on OSD for 4 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>P</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+p')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Cycle playlist sort method. <span class="tag tag-c">cycles</span></span>
+          <span class="desc-detail">name asc → size desc → date desc → duration desc → name desc. Applies 1 second after the last press (debounced). Reloads playlist in sorted order while keeping the current file playing.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>)</kbd><button class="copy-btn" onclick="copyKey(this,')')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Open recent files history.</span>
+          <span class="desc-detail">↑↓ or scroll to navigate, 1–0 to jump directly, Enter/middle-click to load, Del to remove entry, Esc/right-click to close. Saves to history.log on file close (skips if past 100% playback position).</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- SUBTITLES -->
+  <div class="section" id="subs">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Subtitles</h2>
+      <span class="src">sub-scale.lua · input.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>G</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+g')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Increase subtitle font scale.</span>
+          <span class="desc-detail">Smart increment stepping: tries 0.025, falls back to 0.5, then 1.0 if mpv doesn't accept smaller steps.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>F</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+f')">copy</button></div></td>
+        <td><span class="desc-main">Decrease subtitle font scale.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>R</kbd><button class="copy-btn" onclick="copyKey(this,'r')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Move subtitles up (sub-pos −0.25). <span class="conflict">reassigned</span></span>
+          <span class="desc-detail">Default: cycle sub track. Now moves subtitle position. Tracks a float internally, rounds to integer for mpv.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>T</kbd><button class="copy-btn" onclick="copyKey(this,'t')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Move subtitles down (sub-pos +0.25). <span class="conflict">reassigned</span></span>
+          <span class="desc-detail">Default: show progress bar. Now moves subtitle position.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>U</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+Ctrl+u')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Cycle subtitle blur. <span class="tag tag-c">cycles</span></span>
+          <span class="desc-detail">0.0 → 0.5 → 1.0 → 1.5 → 2.0. Useful for softening hard-edged bitmap subs.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>U</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+u')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle subtitle monochrome. <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">Strips colour styling, forces white text.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>U</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+Shift+u')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Cycle .ass subtitle override mode. <span class="tag tag-c">cycles</span></span>
+          <span class="desc-detail">strip → force → yes → no. Controls how styled .ass subtitles are rendered; "strip" removes all styling, "force" overrides with mpv defaults.</span>
+        </td>
+      </tr>
+    </table>
+    <p class="note-block">Defaults (mpv.conf): font=Trebuchet MS · sub-gauss=0.8 · sub-pos=103.5 · sub-scale=1.0 · sub-color=#f7f7f7 · sub-border-color=#121212 · sub-border-size=3.6 · sub-shadow-color=#404040</p>
+    </div>
+  </div>
+
+  <!-- ANIME PROFILE -->
+  <div class="section" id="anime">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Anime Profile</h2>
+      <span class="src">anime_profile.lua</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>A</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+Alt+a')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Reset subtitle scale to 1.0 and position to 100.</span>
+          <span class="desc-detail">Also fires Ctrl+1 (Anime4K HQ Mode A+A) if the video height is over 480px. OSD confirms which actions ran.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- SHADERS -->
+  <div class="section" id="shaders">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Upscaling Shaders</h2>
+      <span class="src">shaders.lua</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>1</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+1')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Anime4K HQ <span class="tag tag-c">3 presets</span></span>
+          <span class="desc-detail">Mode A+A (Restore VL + Upscale VL + Restore M + Upscale M) → Mode B+B (Restore Soft) → Mode C+A (Upscale Denoise + Restore M) → off. Full CNN restore + upscale pipeline, heaviest on GPU.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>2</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+2')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Anime4K <span class="tag tag-c">3 presets</span></span>
+          <span class="desc-detail">Mode A → B → C → off. Lighter than HQ — same upscale stages but no double-pass restore.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>3</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+3')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Ani4Kv2 <span class="tag tag-c">2 presets</span></span>
+          <span class="desc-detail">Ani4Kv2 ArtCNN C4F32 → CMP variant → off. v2 generation ArtCNN upscaler; CMP is a smaller/faster build.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>4</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+4')">copy</button></div></td>
+        <td>
+          <span class="desc-main">AniSD <span class="tag tag-c">2 presets</span></span>
+          <span class="desc-detail">AniSD ArtCNN C4F32 i4 → CMP → off. Tuned for SD source material; 4-pass inference.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>5</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+5')">copy</button></div></td>
+        <td>
+          <span class="desc-main">FSRCNNX <span class="tag tag-c">2 presets</span></span>
+          <span class="desc-detail">x2 8-0-4-1 (faster) → x2 16-0-4-1 (higher quality) → off. Works well on live-action too, not just anime.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>0</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+0')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Clear all GLSL shaders immediately.</span>
+          <span class="desc-detail">Resets internal state so the next Ctrl+1–5 press starts from preset 1 again. Each key also clears any other active family before loading its own.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="section" id="video">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Video</h2>
+      <span class="src">rotate.lua · crop.lua · input.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>=</kbd><button class="copy-btn" onclick="copyKey(this,'=')">copy</button></div></td>
+        <td><span class="desc-main">Increase sharpness +0.05.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>-</kbd><button class="copy-btn" onclick="copyKey(this,'-')">copy</button></div></td>
+        <td><span class="desc-main">Decrease sharpness −0.05.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>A</kbd><button class="copy-btn" onclick="copyKey(this,'A')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Cycle aspect ratio override. <span class="tag tag-c">cycles</span></span>
+          <span class="desc-detail">16:9 (1.777) → 4:3 (1.333) → 2.35:1 → 1.576 → auto (−1).</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>R</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+r')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Rotate video 90° clockwise.</span>
+          <span class="desc-detail">OSD shows current rotation. Wraps at 360°.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>R</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+R')">copy</button></div></td>
+        <td><span class="desc-main">Rotate video 90° counter-clockwise.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>C</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+Shift+c')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle crop tool (hard crop filter). <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">Draw region with mouse. Arrow keys = coarse (30px), Alt+Arrows = fine (1px). Enter/click to apply, Esc to cancel. Toggling again removes the filter. Requires software or copy-mode decoding.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- AUDIO -->
+  <div class="section" id="audio">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Audio</h2>
+      <span class="src">input.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>M</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+Shift+m')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle stereo → mono mix. <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">lavfi pan filter: c0=c0+c1. Mixes both channels into one. Useful for headphones with centred dialogue.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="fn-key">F1</kbd><button class="copy-btn" onclick="copyKey(this,'F1')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Cycle Dynamic Audio Normalisation. <span class="tag tag-c">cycles</span></span>
+          <span class="desc-detail">dynaudnorm g=7 → g=5 → g=3 → off. Higher g = more aggressive smoothing over time.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="fn-key">F2</kbd><button class="copy-btn" onclick="copyKey(this,'F2')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle EBU R128 loudness normalisation. <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">loudnorm I=−16 TP=−1.5 LRA=11. Targets broadcast loudness standard.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="fn-key">F3</kbd><button class="copy-btn" onclick="copyKey(this,'F3')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle dynaudnorm compressor + soft clip. <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">dynaudnorm f=75:g=25:n=0:p=0.58 drives the compression; volume softclip=yes prevents hard clipping on peaks. More aggressive than F1.</span>
+        </td>
+      </tr>
+    </table>
+    <p class="note-block">Audio language priority: Japanese Stereo → Japanese → English Stereo → English (set in mpv.conf alang)</p>
+    </div>
+  </div>
+
+  <!-- FILE BROWSER -->
+  <div class="section" id="filebrowser">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>File Browser</h2>
+      <span class="src">scripts/file-browser/ · file-browser-keybinds.json</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr><td colspan="2" style="padding:0"><div class="click-label">open / close</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>B</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+b')">copy</button></div></td>
+        <td><span class="desc-main">Toggle file browser open/close.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">navigation (while open)</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>J</kbd> / <kbd>←</kbd></div></td>
+        <td><span class="desc-main">Go up to parent directory.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>L</kbd> / <kbd>→</kbd></div></td>
+        <td><span class="desc-main">Enter directory or open file.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>I</kbd> / <kbd>↑</kbd></div></td>
+        <td><span class="desc-main">Scroll up.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>K</kbd> / <kbd>↓</kbd></div></td>
+        <td><span class="desc-main">Scroll down.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>PgDn</kbd> / <kbd>PgUp</kbd></div></td>
+        <td><span class="desc-main">Scroll a full page.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>PgDn/PgUp</kbd></div></td>
+        <td><span class="desc-main">Jump to bottom / top of list.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Home</kbd></div></td>
+        <td><span class="desc-main">Go to currently playing file's directory.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>Home</kbd></div></td>
+        <td><span class="desc-main">Go to root (~/  by default).</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>R</kbd></div></td>
+        <td><span class="desc-main">Reload / rescan current directory.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">selection &amp; loading</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Enter</kbd></div></td>
+        <td><span class="desc-main">Play selected file (replace current).</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>Enter</kbd></div></td>
+        <td><span class="desc-main">Append and play selected file.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>Enter</kbd></div></td>
+        <td>
+          <span class="desc-main">Play with autoload enabled.</span>
+          <span class="desc-detail">Loads all same-type files in the directory into the playlist.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>S</kbd> (lower)</div></td>
+        <td><span class="desc-main">Toggle multi-select mode.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>S</kbd> (upper)</div></td>
+        <td><span class="desc-main">Toggle selection on current item.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>A</kbd></div></td>
+        <td><span class="desc-main">Select all items.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Esc</kbd></div></td>
+        <td><span class="desc-main">Close browser.</span></td>
+      </tr>
+    </table>
+    <p class="note-block">IJKL navigation is custom (file-browser-keybinds.json). Root: ~/. Shows 25 entries. Audio extensions like .mka, .dts append as extra tracks rather than playlist items. Subtitle extensions auto-attach.</p>
+    </div>
+  </div>
+
+  <!-- CLIPBOARD -->
+  <div class="section" id="clipboard">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Clipboard</h2>
+      <span class="src">SmartCopyPaste.lua</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>V</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+v')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Paste and load file or URL from clipboard.</span>
+          <span class="desc-detail">Uses wl-paste (Wayland). Supports file paths, http/https URLs, magnet links. If the clipboard contains a timestamp in the format <code style="color:var(--hi3);font-size:10px">path |time=N</code>, seeks to N−0.65s for a brief preview before the exact position.</span>
+        </td>
+      </tr>
+    </table>
+    <p class="note-block">Ctrl+C copy is commented out in SmartCopyPaste.lua — only paste is active. To enable, uncomment the ctrl+c binding at the bottom of the script. The copy format is <code style="color:var(--hi3);font-size:10px">path |time=N</code>.</p>
+    </div>
+  </div>
+
+  <!-- PROFILES & CLOCK -->
+  <div class="section" id="profiles">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Profiles &amp; Clock</h2>
+      <span class="src">profile-switch.lua · mpv_clock.lua</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd class="mod">Shift</kbd><span class="plus">+</span><kbd>P</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+Shift+p')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle between <em>main</em> and <em>light</em> profiles.</span>
+          <span class="desc-detail"><strong>main</strong>: gpu-next, Vulkan, hwdec=vulkan, display-resample + interpolation with oversample tscale, bt.2390 tone mapping, hdr-compute-peak.<br><strong>light</strong>: gpu (not gpu-next), hwdec=vulkan, audio sync, no interpolation, bilinear scale/dscale, linear tscale, rgb32 fbo. Lighter on GPU.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>P</kbd><button class="copy-btn" onclick="copyKey(this,'Ctrl+p')">copy</button></div></td>
+        <td><span class="desc-main">Show active profile and current hwdec on OSD for 2.5 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>H</kbd><button class="copy-btn" onclick="copyKey(this,'h')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Show OS time + date on OSD for 2.5 seconds.</span>
+          <span class="desc-detail">Format: HH:MM — Weekday DD Month</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Alt</kbd><span class="plus">+</span><kbd>H</kbd><button class="copy-btn" onclick="copyKey(this,'Alt+h')">copy</button></div></td>
+        <td>
+          <span class="desc-main">Toggle persistent clock overlay. <span class="tag tag-t">toggle</span></span>
+          <span class="desc-detail">Updates every second until toggled off.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- BACKGROUND SCRIPTS -->
+  <div class="section" id="bgscripts">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Background Scripts</h2>
+      <span class="src">no keybinds — automatic</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="t">
+      <tr>
+        <td class="col-key"><span class="bg-label">titles.lua</span></td>
+        <td>
+          <span class="desc-main">Sets the window title bar on every file load, updating every 3 seconds.</span>
+          <span class="desc-detail"><strong>Video</strong> (mp4, mkv, avi, flv, mov): <code style="color:var(--hi3);font-size:10px">(01/12) Filename [Chapter] - mpv</code><br>
+          <strong>Audio</strong> (mp3, flac, m4a, wav, wma, aac, dsd, dsf, mqa): <code style="color:var(--hi3);font-size:10px">(01/12) Artist - 03 - Title [Album, Year, codec kbps, ext] - mpv</code>. For FLAC, bitrate is replaced with bit depth / sample rate (e.g. 24bit / 96kHz). m4a omits the file extension from the bracket. Also resets audio filters (af) on audio file load.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><span class="bg-label">auto-image-playlist.lua</span></td>
+        <td>
+          <span class="desc-main">When an image is opened, auto-adds all other images in the directory to the playlist alphabetically.</span>
+          <span class="desc-detail">Supported: jpg, jpeg, png, bmp, gif, webp, tiff, tif, apng. Animated formats (gif, apng) loop the individual file; static images do not. Playlist itself never loops. Only runs if the playlist has one item — won't re-add if images are already loaded.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><span class="bg-label">sub_path.lua</span></td>
+        <td>
+          <span class="desc-main">Expands subtitle search paths on every file load.</span>
+          <span class="desc-detail">Adds Sub/, Subs/, Subtitles/ as search directories. Also adds Subs/&lt;filename-no-ext&gt; for per-file subtitle folders. Deduplicates paths case-insensitively.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><span class="bg-label">sub-select.lua</span></td>
+        <td>
+          <span class="desc-main">Auto-selects the best subtitle track based on active audio language.</span>
+          <span class="desc-detail">Rules from sub-select.json (in order):<br>
+          1. Japanese audio → English subs, blacklisting tracks named "sign" or "s&amp;s"<br>
+          2. English/unknown audio → English/undefined, external subs only<br>
+          3. English/unknown audio → English/undefined, forced subs only<br>
+          4. English/unknown audio → English/undefined (any sub)<br>
+          5. Fallback: undefined language subs<br>
+          Runs synchronously at preload. Detects and corrects wrong audio track predictions.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- OSC BUTTONS -->
+  <div class="section" id="osc">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>OSC Button Clicks</h2>
+      <span class="src">scripts/osc.lua · osc.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <p class="note-block" style="margin-bottom:16px;margin-top:0">Custom osc.lua — bottombar layout. Title shows <strong>HH:MM | 02 media-title [chapter]</strong> — live clock, zero-padded track number from metadata, leading numbers stripped from filename when it matches media-title, chapter omitted for .m4a. OSC only appears on hover (deadzonesize=1.0).</p>
+    <table class="t">
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Title bar</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Show playlist position + title on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Show raw filename on OSD.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Menu button</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Show current playlist on OSD for 3 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Middle click</kbd></div></td>
+        <td><span class="desc-main">Show current file path on OSD for 3 seconds.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Open select/menu script.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Playlist prev / next</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Go to previous/next file and show updated playlist on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Show playlist on OSD for 3 seconds (no track change).</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Middle click</kbd></div></td>
+        <td><span class="desc-main">Show playlist on OSD for 3 seconds.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Chapter prev / next</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Jump chapter and show chapter list on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Show chapter list on OSD for 3 seconds.</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Audio track button</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Cycle audio track forward.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Cycle audio track backward.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Middle click</kbd></div></td>
+        <td><span class="desc-main">Show full audio track list on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll</kbd></div></td>
+        <td><span class="desc-main">Cycle audio tracks (scroll direction reversed vs default).</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Subtitle track button</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Cycle subtitle track forward.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Cycle subtitle track backward.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Middle click</kbd></div></td>
+        <td><span class="desc-main">Show full subtitle track list on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll</kbd></div></td>
+        <td><span class="desc-main">Cycle subtitle tracks (scroll direction reversed vs default).</span></td>
+      </tr>
+      <tr><td colspan="2" style="padding:0"><div class="click-label">Custom V button</div></td></tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Left click</kbd></div></td>
+        <td><span class="desc-main">Show all video tracks on OSD.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Middle click</kbd></div></td>
+        <td><span class="desc-main">Reset to video track 1.</span></td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Right click</kbd></div></td>
+        <td><span class="desc-main">Cycle video tracks.</span></td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- OVERRIDDEN DEFAULTS -->
+  <div class="section" id="overrides">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>Overridden &amp; Disabled Defaults</h2>
+      <span class="src">input.conf · scripts</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <p class="note-block" style="margin-bottom:16px;margin-top:0">Keys marked here differ from <a href="https://mpv.io/manual/master/#keyboard-control" target="_blank" style="color:var(--hi2);text-decoration:none">mpv defaults</a>.</p>
+    <table class="t">
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>R</kbd></div></td>
+        <td>
+          <span class="desc-main">Reassigned: move subtitles up.</span>
+          <span class="desc-detail">Default was: cycle subtitle track forward.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>T</kbd></div></td>
+        <td>
+          <span class="desc-main">Reassigned: move subtitles down.</span>
+          <span class="desc-detail">Default was: show playback progress bar.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>F</kbd></div></td>
+        <td>
+          <span class="desc-main">Ignored (disabled).</span>
+          <span class="desc-detail">Default was: toggle fullscreen. Disabled to avoid accidental fullscreen from subtitle size keys.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>G</kbd></div></td>
+        <td>
+          <span class="desc-main">Ignored (disabled).</span>
+          <span class="desc-detail">Default was: cycle subtitle track (some builds). Disabled, subtitle scale handled by sub-scale.lua on Alt+G/F.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>E</kbd></div></td>
+        <td>
+          <span class="desc-main">Ignored (disabled).</span>
+          <span class="desc-detail">Default was: cycle edition (set of chapters).</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Enter</kbd></div></td>
+        <td>
+          <span class="desc-main">Ignored (disabled).</span>
+          <span class="desc-detail">Default was: skip to next playlist item. Disabled to prevent accidental skips.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd class="mod">Ctrl</kbd><span class="plus">+</span><kbd>O</kbd></div></td>
+        <td>
+          <span class="desc-main">Disabled (commented out in file-browser/main.lua).</span>
+          <span class="desc-detail">Default file-browser binding was: open browser without toggle. Removed to keep Ctrl+B as the only browser key.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>Scroll</kbd> on OSC audio/sub</div></td>
+        <td>
+          <span class="desc-main">Scroll direction reversed on OSC audio and subtitle track buttons.</span>
+          <span class="desc-detail">Configured in osc.conf via audio_track_wheel_down/up_command and sub_track_wheel_down/up_command.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="col-key"><div class="keys"><kbd>af</kbd> on audio load</div></td>
+        <td>
+          <span class="desc-main">Audio filters reset automatically on audio file load.</span>
+          <span class="desc-detail">titles.lua sets af="" on each audio file to prevent filters from carrying over between tracks.</span>
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <!-- CONFIG SECTIONS -->
+  <div class="section" id="opts-osc">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>osc.conf</h2>
+      <span class="src">script-opts/osc.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">scalewindowed / scalefullscreen</td><td class="col-val">0.9</td><td class="col-about">OSC slightly smaller than default in both modes.</td></tr>
+      <tr><td class="col-opt">title</td><td class="col-val">(built in code)</td><td class="col-about">Constructed in osc.lua: <code style="color:var(--hi3);font-size:10px">HH:MM | 02 media-title [chapter]</code>. Clock updates live each redraw. Track number zero-padded to 2 digits from metadata. When media-title matches the bare filename, leading track numbers are stripped (e.g. <code style="color:var(--hi3);font-size:10px">01 - Episode.mkv</code> → <code style="color:var(--hi3);font-size:10px">Episode.mkv</code>). Chapter suffix omitted for .m4a.</td></tr>
+      <tr><td class="col-opt">timetotal</td><td class="col-val">yes</td><td class="col-about">Shows total duration rather than remaining time.</td></tr>
+      <tr><td class="col-opt">deadzonesize</td><td class="col-val">1.0</td><td class="col-about">OSC only appears when the mouse hovers directly over it.</td></tr>
+      <tr><td class="col-opt">audio/sub scroll direction</td><td class="col-val">reversed</td><td class="col-about">Scroll direction on audio and subtitle track buttons is flipped vs mpv default.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-autoload">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>autoload.conf</h2>
+      <span class="src">script-opts/autoload.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">images</td><td class="col-val">no</td><td class="col-about">Images excluded from autoload — handled by auto-image-playlist.lua instead.</td></tr>
+      <tr><td class="col-opt">videos / audio</td><td class="col-val">yes (default)</td><td class="col-about">Video and audio files in the same directory auto-populate the playlist.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-fb">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>file_browser.conf</h2>
+      <span class="src">script-opts/file_browser.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">root</td><td class="col-val">~/</td><td class="col-about">Browser starts at home directory.</td></tr>
+      <tr><td class="col-opt">num_entries</td><td class="col-val">25</td><td class="col-about">Items shown at once.</td></tr>
+      <tr><td class="col-opt">custom_keybinds</td><td class="col-val">yes</td><td class="col-about">Loads file-browser-keybinds.json (IJKL nav).</td></tr>
+      <tr><td class="col-opt">filter_files</td><td class="col-val">yes</td><td class="col-about">Hides non-mpv-compatible files.</td></tr>
+      <tr><td class="col-opt">audio_extensions</td><td class="col-val">mka,dts…</td><td class="col-about">Append as audio tracks rather than new playlist items.</td></tr>
+      <tr><td class="col-opt">subtitle_extensions</td><td class="col-val">srt,ass…</td><td class="col-about">Auto-attach as subtitle tracks.</td></tr>
+      <tr><td class="col-opt">filter_dot_dirs/files</td><td class="col-val">no</td><td class="col-about">Hidden dot-files are shown.</td></tr>
+      <tr><td class="col-opt">addons</td><td class="col-val">yes</td><td class="col-about">Loads from script-opts/browser-addons/ (favourites, endtime, find, m3u, etc.).</td></tr>
+      <tr><td class="col-opt">font colours</td><td class="col-val">(custom)</td><td class="col-about">Header/wrappers: #909090. Selected/cursor: #90ffff. Playing: #b2f7f7.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-recent">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>recent.conf</h2>
+      <span class="src">script-opts/recent.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">display_bind</td><td class="col-val">)</td><td class="col-about">Changed from default backtick.</td></tr>
+      <tr><td class="col-opt">auto_run_idle</td><td class="col-val">no</td><td class="col-about">Does not auto-open on idle.</td></tr>
+      <tr><td class="col-opt">write_watch_later</td><td class="col-val">yes</td><td class="col-about">Saves watch position when switching files.</td></tr>
+      <tr><td class="col-opt">log_path</td><td class="col-val">history.log</td><td class="col-about">Stored in mpv config directory.</td></tr>
+      <tr><td class="col-opt">date_format</td><td class="col-val">%d/%m/%y %X</td><td class="col-about">DD/MM/YY HH:MM:SS.</td></tr>
+      <tr><td class="col-opt">hi_color</td><td class="col-val">H46CFFF</td><td class="col-about">Selection highlight colour (BGR format).</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-crop">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>crop.conf</h2>
+      <span class="src">script-opts/crop.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">mode</td><td class="col-val">hard</td><td class="col-about">Applies an actual crop filter. Works with encode.lua.</td></tr>
+      <tr><td class="col-opt">draw_crosshair</td><td class="col-val">yes</td><td class="col-about">Shows crosshair cursor while selecting.</td></tr>
+      <tr><td class="col-opt">draw_shade</td><td class="col-val">yes</td><td class="col-about">Dims area outside selection (opacity 0x77).</td></tr>
+      <tr><td class="col-opt">draw_frame</td><td class="col-val">yes</td><td class="col-about">White border around selected region.</td></tr>
+      <tr><td class="col-opt">coarse_movement</td><td class="col-val">30px</td><td class="col-about">Arrow key step.</td></tr>
+      <tr><td class="col-opt">fine_movement</td><td class="col-val">1px</td><td class="col-about">Alt+Arrow step.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-subsel">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>sub_select.conf</h2>
+      <span class="src">script-opts/sub_select.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">preload</td><td class="col-val">yes</td><td class="col-about">Selects subtitles synchronously during preload hook for better compatibility.</td></tr>
+      <tr><td class="col-opt">force_enable</td><td class="col-val">no</td><td class="col-about">Only active when sid is not manually set.</td></tr>
+      <tr><td class="col-opt">select_audio</td><td class="col-val">no</td><td class="col-about">Audio track auto-selection disabled.</td></tr>
+      <tr><td class="col-opt">detect_incorrect_predictions</td><td class="col-val">yes</td><td class="col-about">Re-checks subtitle selection if the predicted audio track was wrong.</td></tr>
+      <tr><td class="col-opt">config</td><td class="col-val">~~/script-opts</td><td class="col-about">Loads sub-select.json preference rules.</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <div class="section" id="opts-subpath">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>sub_path_config.conf</h2>
+      <span class="src">script-opts/sub_path_config.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">base_paths</td><td class="col-val">Sub,Subs,Subtitles</td><td class="col-about">Subdirectory names searched for external subtitle files alongside the video.</td></tr>
+    </table>
+    <p class="note-block">use_filename and debug keys cause "unknown key" errors in this script version — left commented out.</p>
+    </div>
+  </div>
+
+  <div class="section" id="opts-mpv">
+    <div class="section-head" onclick="toggleSection(this)">
+      <h2>mpv.conf</h2>
+      <span class="src">mpv.conf</span>
+      <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="section-body">
+    <table class="opts-t">
+      <tr><td class="col-opt">vo</td><td class="col-val">gpu-next</td><td class="col-about">Next-gen video output renderer.</td></tr>
+      <tr><td class="col-opt">gpu-api</td><td class="col-val">vulkan</td><td class="col-about">Vulkan backend.</td></tr>
+      <tr><td class="col-opt">hwdec</td><td class="col-val">vulkan</td><td class="col-about">Vulkan hardware decoding.</td></tr>
+      <tr><td class="col-opt">tone-mapping</td><td class="col-val">bt.2390</td><td class="col-about">HDR → SDR tone mapping using BT.2390 method.</td></tr>
+      <tr><td class="col-opt">hdr-compute-peak</td><td class="col-val">yes</td><td class="col-about">Dynamically measures peak brightness per scene for more accurate tone mapping.</td></tr>
+      <tr><td class="col-opt">target-colorspace-hint</td><td class="col-val">no</td><td class="col-about">Disables passing colorspace hints to the display; mpv handles tone mapping itself rather than deferring to the compositor.</td></tr>
+      <tr><td class="col-opt">video-sync</td><td class="col-val">display-resample</td><td class="col-about">Resamples video frames to match the display refresh rate, avoiding judder from frame rate mismatches.</td></tr>
+      <tr><td class="col-opt">interpolation + tscale</td><td class="col-val">oversample</td><td class="col-about">Frame interpolation enabled. Oversample is a sharp temporal scaler — at exact frame boundaries it blends minimally; between frames it holds the nearest sample.</td></tr>
+      <tr><td class="col-opt">volume-max</td><td class="col-val">250</td><td class="col-about">Allows boosting volume above 100%.</td></tr>
+      <tr><td class="col-opt">alang</td><td class="col-val">Japanese, English…</td><td class="col-about">Preferred audio language order: Japanese Stereo first.</td></tr>
+      <tr><td class="col-opt">slang</td><td class="col-val">English…</td><td class="col-about">Preferred subtitle language.</td></tr>
+      <tr><td class="col-opt">sub-font</td><td class="col-val">Trebuchet MS</td><td class="col-about">Custom subtitle font (trebuc.ttf in fonts/).</td></tr>
+      <tr><td class="col-opt">sub-gauss</td><td class="col-val">0.8</td><td class="col-about">Default subtitle blur.</td></tr>
+      <tr><td class="col-opt">ytdl-format</td><td class="col-val">bestvideo[h≤1080]+bestaudio</td><td class="col-about">Cap yt-dlp streams at 1080p.</td></tr>
+      <tr><td class="col-opt">autocreate-playlist</td><td class="col-val">same</td><td class="col-about">Opens all same-type files in directory as playlist.</td></tr>
+      <tr><td class="col-opt">[extension.gif]</td><td class="col-val">loop-file=inf</td><td class="col-about">GIFs loop forever.</td></tr>
+      <tr><td class="col-opt">autofit</td><td class="col-val">40%×40%</td><td class="col-about">Window clamped to 40% of screen, centred at 50%:50%.</td></tr>
+      <tr><td class="col-opt">screenshot-template</td><td class="col-val">/mnt/Storage/…</td><td class="col-about">Screenshots saved to external storage as PNG.</td></tr>
+    </table>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── collapsible sections ──
+function toggleSection(head) {
+  head.closest('.section').classList.toggle('collapsed');
+}
+
+// ── copy key binding ──
+function copyKey(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+
+// ── search ──
+const searchInput = document.getElementById('search');
+const noResults = document.getElementById('no-results');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+
+  // Clear previous highlights
+  document.querySelectorAll('mark').forEach(m => {
+    m.outerHTML = m.textContent;
+  });
+
+  if (!q) {
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.remove('search-hidden');
+      s.classList.remove('collapsed');
+    });
+    document.querySelectorAll('.t tr').forEach(r => r.classList.remove('search-hidden'));
+    noResults.style.display = 'none';
+    return;
+  }
+
+  let anyVisible = false;
+
+  document.querySelectorAll('.section').forEach(section => {
+    const rows = section.querySelectorAll('.t tr');
+    let sectionHit = false;
+
+    // Also check section heading text
+    const headText = section.querySelector('h2')?.textContent.toLowerCase() || '';
+    const srcText = section.querySelector('.src')?.textContent.toLowerCase() || '';
+    const noteText = section.querySelector('.note-block')?.textContent.toLowerCase() || '';
+    if (headText.includes(q) || srcText.includes(q) || noteText.includes(q)) {
+      sectionHit = true;
+    }
+
+    rows.forEach(row => {
+      // skip label rows (click-label colspan rows)
+      if (row.querySelector('[colspan]')) return;
+      const text = row.textContent.toLowerCase();
+      if (text.includes(q)) {
+        row.classList.remove('search-hidden');
+        sectionHit = true;
+        // highlight
+        highlightText(row, q);
+      } else {
+        row.classList.add('search-hidden');
+      }
+    });
+
+    // For opts tables
+    section.querySelectorAll('.opts-t tr').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      if (text.includes(q)) {
+        row.classList.remove('search-hidden');
+        sectionHit = true;
+        highlightText(row, q);
+      } else {
+        row.classList.add('search-hidden');
+      }
+    });
+
+    if (sectionHit) {
+      section.classList.remove('search-hidden');
+      section.classList.remove('collapsed');
+      anyVisible = true;
+    } else {
+      section.classList.add('search-hidden');
+    }
+  });
+
+  noResults.style.display = anyVisible ? 'none' : 'block';
+});
+
+function highlightText(el, q) {
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  let node;
+  while (node = walk.nextNode()) nodes.push(node);
+  nodes.forEach(n => {
+    const idx = n.textContent.toLowerCase().indexOf(q);
+    if (idx === -1) return;
+    const span = document.createElement('span');
+    const before = document.createTextNode(n.textContent.slice(0, idx));
+    const mark = document.createElement('mark');
+    mark.textContent = n.textContent.slice(idx, idx + q.length);
+    const after = document.createTextNode(n.textContent.slice(idx + q.length));
+    span.append(before, mark, after);
+    n.replaceWith(span);
+  });
+}
+
+// ── active nav highlight on scroll ──
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { threshold: 0.2 });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

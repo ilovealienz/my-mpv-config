@@ -1,0 +1,25 @@
+[
+    {
+        "alang": ["jpn", "ja","japanese"],
+        "slang": ["eng?", "english"],
+        "blacklist": [ "sign", "s&s", "songs /", "/ signs", "songs" ]
+    },
+    {
+        "alang": ["eng?", "english", "und"],
+        "slang": ["eng?", "und"],
+        "condition": "sub.external"
+    },
+    {
+        "alang": ["eng?", "english", "und"],
+        "slang": ["eng?", "und"],
+        "condition": "sub.forced"
+    },
+    {
+        "alang": ["eng?", "english", "und"],
+        "slang": ["eng?", "und"]
+    },
+    {
+        "inherit": "^",
+        "slang": "und"
+    }
+]
