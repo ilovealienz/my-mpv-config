@@ -2403,9 +2403,13 @@ local function osc_init()
         local chapter_title = mp.get_property("chapter-metadata/by-key/title") or ""
 
         if media_title == filename or media_title == filename .. "." .. ext then
-            local stripped = filename:gsub("^%d+%s*[-.]?%s*", "")
-            if stripped ~= "" then
-                media_title = stripped .. "." .. ext
+            if track_number ~= "" then
+                local stripped = filename:gsub("^%d+%s*[-.]?%s*", "")
+                if stripped ~= "" then
+                    media_title = stripped .. "." .. ext
+                else
+                    media_title = filename .. "." .. ext
+                end
             else
                 media_title = filename .. "." .. ext
             end
