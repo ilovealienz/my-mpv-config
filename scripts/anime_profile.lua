@@ -1,5 +1,7 @@
 -- anime_profile.lua
 
+local anime_profile_applied = false
+
 local function apply_anime_profile()
     -- Reset subs
     mp.set_property("sub-scale", "1.0")
@@ -17,15 +19,15 @@ end
 
 local function is_anime_path(path)
     if not path then return false end
-    -- Match either .../Anime/... or .../Anime/Dual Audio/...
     return path:lower():find("/anime/") ~= nil
 end
 
--- Auto-apply on file load
+-- Auto-apply once on first file load
 mp.register_event("file-loaded", function()
     local path = mp.get_property("path")
-    if is_anime_path(path) then
+    if not anime_profile_applied and is_anime_path(path) then
         apply_anime_profile()
+        anime_profile_applied = true
     end
 end)
 
