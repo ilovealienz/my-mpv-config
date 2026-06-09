@@ -1,4 +1,4 @@
--- mpv-lua-script.lua
+-- shaders.lua
 
 local mp = require 'mp'
 
@@ -131,3 +131,22 @@ for key, family in pairs(families) do
         mp.osd_message(family.label .. " [" .. state[key] .. "/" .. #presets .. "]: " .. preset.name)
     end)
 end
+
+mp.register_script_message("apply-shader-family", function(key, osd_override)
+    local family = families[key]
+    if not family then return end
+
+    for k in pairs(state) do state[k] = nil end
+    mp.commandv("change-list", "glsl-shaders", "clr", "")
+    state[key] = 1
+
+    local preset = family.presets[1]
+    local path_str = table.concat(preset.paths, separator)
+    mp.commandv("change-list", "glsl-shaders", "set", path_str)
+
+    if osd_override and osd_override ~= "" then
+        mp.osd_message(osd_override)
+    else
+        mp.osd_message(family.label .. " [1/" .. #family.presets .. "]: " .. preset.name)
+    end
+end)

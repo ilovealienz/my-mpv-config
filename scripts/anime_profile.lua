@@ -7,11 +7,10 @@ local function apply_anime_profile()
     mp.set_property("sub-scale", "1.0")
     mp.set_property("sub-pos", "100")
 
-    -- If over 480p, trigger Anime4K HQ (CTRL+1)
+    -- If over 480p, apply Anime4K HQ via shaders.lua
     local h = mp.get_property_number("video-params/h")
     if h and h > 480 then
-        mp.commandv("keypress", "CTRL+1")
-        mp.osd_message("Anime profile: subs reset + Anime4K HQ")
+        mp.commandv("script-message", "apply-shader-family", "CTRL+1", "Anime profile loaded")
     else
         mp.osd_message("Anime profile: subs reset")
     end
