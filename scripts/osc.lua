@@ -3290,7 +3290,12 @@ observe_cached("pause", request_tick)
 observe_cached("volume", request_tick)
 observe_cached("mute", request_tick)
 observe_cached("demuxer-cache-state", request_tick)
-mp.observe_property("vo-configured", "bool", request_tick)
+mp.observe_property("vo-configured", "bool", function(_, val)
+    if val then
+        request_init()
+        request_tick()
+    end
+end)
 mp.observe_property("playback-time", "number", request_tick)
 observe_cached("osd-dimensions", request_init_resize)
 observe_cached("osd-scale-by-window", request_init_resize)
