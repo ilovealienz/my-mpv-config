@@ -86,6 +86,10 @@ on_silence = function(_, meta)
 end
 
 local function tick()
+    if mp.get_property_bool('eof-reached', false) then
+        stop_skip()
+        return
+    end
     local now = mp.get_property_number('time-pos')
     if now and now > start_time + opts.max_skip then
         stop_skip()
@@ -95,8 +99,10 @@ local function tick()
     end
     if is_stream() then
         local cache = mp.get_property_number('demuxer-cache-duration', 0)
-        local speed = math.max(opts.stream_min_speed, math.min(opts.stream_max_speed, cache / 2))
-        mp.set_property_number('speed', speed)
+        local speed = math.floor(math.max(opts.stream_min_speed, math.min(opts.stream_max_speed, cache / 2)))
+        if speed ~= mp.get_property_number('speed') then
+            mp.set_property_number('speed', speed)
+        end
     end
 end
 
