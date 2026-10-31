@@ -1,151 +1,147 @@
-MAX_SPEED = 100
-NORMAL_SPEED = 1
-ONE_SECOND = 1
-skip = false
--- Max noise (dB) and min silence duration (s) to trigger
-opts = { quietness = -30, duration = 0.5 }
+local mp = require 'mp'
+local options = require 'mp.options'
 
+local opts = {
+    quietness = -30,
+    duration = 0.5,
+    max_speed = 100,
+    stream_max_speed = 30,
+    stream_min_speed = 2,
+    chapter_lookahead = 10,
+    max_skip = 150,
+}
+options.read_options(opts, 'skip-intro')
 
-function setOptions()
-    local options = require 'mp.options'
-    options.read_options(opts)
+local chapter_patterns = {
+    '^op$', '^op[%s%d%-:]', 'opening', '^ncop', '^intro', 'intro$',
+    'title sequence', 'main title', 'theme song',
+    '^ed$', '^ed[%s%d%-:]', 'ending', '^nced', '^outro', 'outro$', 'credits',
+    'preview', 'next episode', 'next time', 'recap', 'previously on',
+}
+
+local skipping = false
+local start_time = 0
+local saved_speed = 1
+local saved_mute = false
+local saved_cache_pause = nil
+local speed_timer = nil
+local added_vf = false
+local on_silence
+
+local function is_skippable(title)
+    if not title then return false end
+    title = title:lower()
+    for _, p in ipairs(chapter_patterns) do
+        if title:find(p) then return true end
+    end
+    return false
 end
 
-function setTime(time)
-    mp.set_property_number('time-pos', time)
-end
-
-function getTime()
-    return mp.get_property_native('time-pos')
-end
-
-function setSpeed(speed)
-    mp.set_property('speed', speed)
-end
-
-function setPause(state)
-    mp.set_property_bool('pause', state)
-end
-
-function setMute(state)
-    mp.set_property_bool('mute', state)
-end
-
-function initAudioFilter()
-    local af_table = mp.get_property_native('af')
-    af_table[#af_table + 1] = {
-        enabled = false,
-        label   = 'silencedetect',
-        name    = 'lavfi',
-        params  = { graph = 'silencedetect=noise=' .. opts.quietness .. 'dB:d=' .. opts.duration }
-    }
-    mp.set_property_native('af', af_table)
-end
-
-function initVideoFilter()
-    local vf_table = mp.get_property_native('vf')
-    vf_table[#vf_table + 1] = {
-        enabled = false,
-        label   = 'blackout',
-        name    = 'lavfi',
-        params  = { graph = '' }
-    }
-    mp.set_property_native('vf', vf_table)
-end
-
-function setAudioFilter(state)
-    local af_table = mp.get_property_native('af')
-    if #af_table > 0 then
-        for i = #af_table, 1, -1 do
-            if af_table[i].label == 'silencedetect' then
-                af_table[i].enabled = state
-                mp.set_property_native('af', af_table)
-                break
-            end
+local function chapter_target()
+    local now = mp.get_property_number('time-pos')
+    if not now then return nil end
+    local chapters = mp.get_property_native('chapter-list') or {}
+    local duration = mp.get_property_number('duration')
+    for i, c in ipairs(chapters) do
+        local stop = chapters[i + 1] and chapters[i + 1].time or duration
+        local current = c.time <= now and stop and now < stop
+        local upcoming = c.time > now and c.time <= now + opts.chapter_lookahead
+        if stop and (current or upcoming) and is_skippable(c.title) then
+            return stop
         end
     end
 end
 
-function dim(state)
-    local dim = { width = 0, height = 0 }
-    if state == true then
-        dim.width = mp.get_property_native('width')
-        dim.height = mp.get_property_native('height')
-    end
-    return dim.width .. 'x' .. dim.height
+local function is_stream()
+    return mp.get_property_bool('demuxer-via-network', false)
 end
 
-function setVideoFilter(state)
-    local vf_table = mp.get_property_native('vf')
-    if #vf_table > 0 then
-        for i = #vf_table, 1, -1 do
-            if vf_table[i].label == 'blackout' then
-                vf_table[i].enabled = state
-                vf_table[i].params  = { graph = 'nullsink,color=c=black:s=' .. dim(state) }
-                mp.set_property_native('vf', vf_table)
-                break
-            end
-        end
+local function stop_skip()
+    if not skipping then return end
+    skipping = false
+    mp.unobserve_property(on_silence)
+    if speed_timer then
+        speed_timer:kill()
+        speed_timer = nil
+    end
+    mp.commandv('af', 'remove', '@skipsilence')
+    if added_vf then
+        mp.commandv('vf', 'remove', '@skipblack')
+        added_vf = false
+    end
+    mp.set_property_bool('mute', saved_mute)
+    mp.set_property_number('speed', saved_speed)
+    if saved_cache_pause ~= nil then
+        mp.set_property_bool('cache-pause', saved_cache_pause)
+        saved_cache_pause = nil
     end
 end
 
-function silenceTrigger(name, value)
-    if value == '{}' or value == nil then
+on_silence = function(_, meta)
+    if not skipping or type(meta) ~= 'table' then return end
+    local t = tonumber(meta['lavfi.silence_start'])
+    if not t or t < start_time + 1 then return end
+    stop_skip()
+    mp.set_property_number('time-pos', t)
+end
+
+local function tick()
+    local now = mp.get_property_number('time-pos')
+    if now and now > start_time + opts.max_skip then
+        stop_skip()
+        mp.set_property_number('time-pos', start_time)
+        mp.osd_message('No silence found')
         return
     end
+    if is_stream() then
+        local cache = mp.get_property_number('demuxer-cache-duration', 0)
+        local speed = math.max(opts.stream_min_speed, math.min(opts.stream_max_speed, cache / 2))
+        mp.set_property_number('speed', speed)
+    end
+end
 
-    local skipTime = tonumber(string.match(value, '%d+%.?%d+'))
-    local currTime = getTime()
+local function start_skip()
+    skipping = true
+    start_time = mp.get_property_number('time-pos', 0)
+    saved_speed = mp.get_property_number('speed', 1)
+    saved_mute = mp.get_property_bool('mute', false)
 
-    if skipTime == nil or skipTime < currTime + ONE_SECOND then
+    mp.commandv('af', 'pre', '@skipsilence:lavfi=[silencedetect=noise=' ..
+        opts.quietness .. 'dB:d=' .. opts.duration .. ']')
+    local w = mp.get_property_number('width', 0)
+    local h = mp.get_property_number('height', 0)
+    if w > 0 and h > 0 then
+        mp.commandv('vf', 'add', '@skipblack:lavfi=[nullsink,color=c=black:s=' .. w .. 'x' .. h .. ']')
+        added_vf = true
+    end
+    mp.observe_property('af-metadata/skipsilence', 'native', on_silence)
+
+    mp.set_property_bool('pause', false)
+    mp.set_property_bool('mute', true)
+    if is_stream() then
+        -- lower speed instead of pausing when the cache runs low
+        saved_cache_pause = mp.get_property_bool('cache-pause', true)
+        mp.set_property_bool('cache-pause', false)
+        mp.set_property_number('speed', opts.stream_min_speed)
+    else
+        mp.set_property_number('speed', opts.max_speed)
+    end
+    speed_timer = mp.add_periodic_timer(0.25, tick)
+end
+
+local function keypress()
+    if skipping then
+        stop_skip()
+        mp.set_property_number('time-pos', start_time)
         return
     end
-
-    stopSkip()
-    setTime(skipTime)
-    skip = false
-end
-
-function setAudioTrigger(state)
-    if state == true then
-        mp.observe_property('af-metadata/silencedetect', 'string', silenceTrigger)
-    else
-        mp.unobserve_property(silenceTrigger)   
+    local target = chapter_target()
+    if target then
+        mp.set_property_number('time-pos', target)
+        return
     end
+    start_skip()
 end
-
-function startSkip()
-    startTime = getTime()
-    -- This audio filter detects moments of silence
-    setAudioFilter(true)
-    -- This video filter makes fast-forward faster
-    setVideoFilter(true)
-    setAudioTrigger(true)
-    setPause(false)
-    setMute(true)
-    setSpeed(MAX_SPEED)
-end
-
-function stopSkip()
-    setAudioFilter(false)
-    setVideoFilter(false)
-    setAudioTrigger(false)
-    setMute(false)
-    setSpeed(NORMAL_SPEED)
-end
-
-function keypress()
-    skip = not skip
-    if skip then
-        startSkip()
-    else
-        stopSkip()
-        setTime(startTime)
-    end
-end
-
-setOptions(opts)
-initAudioFilter()
-initVideoFilter()
 
 mp.add_key_binding('Shift+Tab', 'skip-key', keypress)
+mp.register_event('end-file', stop_skip)
