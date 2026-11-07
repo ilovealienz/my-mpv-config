@@ -6,9 +6,10 @@
 
     https://github.com/CogentRedTester/mpv-sub-select
 
-    Modified to respect manual subtitle changes for the rest of the session.
-    Once the user manually changes the subtitle track, auto-selection is disabled
-    for all subsequent files until mpv is restarted or the directory changes.
+    Modified to remember manual subtitle changes for the rest of the session.
+    After a manual change, the same kind of track (language, forced or not) is
+    picked in each new file until mpv restarts, or the directory changes for
+    local files.
 ]]--
 
 local mp = require 'mp'
@@ -42,13 +43,12 @@ local latest_audio = {}
 local audio_tracks = {}
 local sub_tracks = {}
 
--- session override: once the user manually changes subs, auto-selection is
--- disabled until mpv restarts or the directory changes
-local session_override = false
+-- manual subtitle choice, reapplied to each new file
+local remembered = nil
 local current_dir = nil
 
--- flag to distinguish sub-select's own sid changes from manual user changes
-local script_is_setting_sid = false
+-- last sid set by this script, so it isn't mistaken for a manual change
+local script_sid = nil
 
 -- represents when there is no audio or subtitle track selected
 local NO_TRACK = {
@@ -189,10 +189,7 @@ end
 local function set_track(type, id)
     msg.verbose("setting", type, "to", id)
     if mp.get_property_number(type) == id then return end
-    if type == 'sid' then
-        script_is_setting_sid = true
-        mp.add_timeout(0, function() script_is_setting_sid = false end)
-    end
+    if type == 'sid' then script_sid = tostring(id) end
     mp.set_property('file-local-options/'..type, id)
 end
 
@@ -356,8 +353,54 @@ local function selection_enabled()
     if not ENABLED then return false end
     if not track_auto_selection then return false end
     if #sub_tracks == 0 then return false end
-    if session_override then return false end
+    if remembered then return false end
     return true
+end
+
+local lang_aliases = { eng = 'en', jpn = 'ja', ger = 'de', deu = 'de', fre = 'fr', fra = 'fr', spa = 'es' }
+
+local function normalise_lang(lang)
+    lang = (lang or 'und'):lower()
+    return lang_aliases[lang] or lang
+end
+
+-- signs & songs tracks are often not flagged forced
+local function is_forced(track)
+    if track.forced then return true end
+    local title = (track.title or ''):lower()
+    return (title:find('forced', 1, true) or title:find('sign', 1, true) or title:find('songs', 1, true) or title:find('s&s', 1, true)) ~= nil
+end
+
+local function remember(track)
+    if not track then
+        remembered = { none = true }
+        msg.info('remembering: no subtitles')
+        return
+    end
+    remembered = {
+        lang = normalise_lang(track.lang),
+        forced = is_forced(track),
+        external = track.external or false,
+        title = track.title or '',
+        id = track.id,
+    }
+    msg.info('remembering subtitle choice: '..utils.to_string(remembered))
+end
+
+-- returns the sid matching the remembered choice, or nil if nothing matches
+local function find_remembered()
+    if remembered.none then return 'no' end
+    local best, best_score
+    for _, track in ipairs(sub_tracks) do
+        if normalise_lang(track.lang) == remembered.lang and is_forced(track) == remembered.forced then
+            local score = 0
+            if (track.external or false) == remembered.external then score = score + 2 end
+            if (track.title or '') == remembered.title then score = score + 1 end
+            if track.id == remembered.id then score = score + 0.5 end
+            if not best or score > best_score then best, best_score = track, score end
+        end
+    end
+    return best and best.id
 end
 
 local INITIAL_LOAD = true
@@ -404,15 +447,29 @@ local function unobserve_audio_switches()
     mp.unobserve_property(reselect_subtitles)
 end
 
--- reset session override on directory change, before tracks are set
+local season_patterns = { '^season%s*%d+$', '^s%d+$', '^specials?$' }
+
+-- returns the show folder, skipping a trailing season folder
+local function show_dir(path)
+    local dir = path:match('^(.*)[/\\]') or ''
+    local name = (dir:match('([^/\\]+)$') or ''):lower()
+    for _, p in ipairs(season_patterns) do
+        if name:find(p) then return dir:match('^(.*)[/\\]') or dir end
+    end
+    return dir
+end
+
+-- forget the manual choice when a local file is in a different show folder
+-- stream URLs differ per episode, so they keep it until mpv restarts
 mp.add_hook('on_preloaded', 23, function()
     local path = mp.get_property('path', '')
-    local dir = path:match('^(.*[/\\])') or ''
+    if path:find('^%a[%w+.-]*://') then return end
+    local dir = show_dir(path)
     if dir ~= current_dir then
-        if session_override then
-            msg.info('directory changed — resetting subtitle auto-selection')
+        if remembered then
+            msg.info('directory changed, forgetting subtitle choice')
         end
-        session_override = false
+        remembered = nil
         current_dir = dir
     end
 end)
@@ -422,6 +479,15 @@ mp.add_hook('on_preloaded', 26, function() latest_audio = predict_audio() end)
 
 -- events for file loading
 mp.add_hook('on_preloaded', 30, function()
+    if remembered and ENABLED and track_auto_selection and #sub_tracks > 0 then
+        local id = find_remembered()
+        if id then
+            set_track('sid', id)
+        else
+            preload()
+        end
+        return
+    end
     if not selection_enabled() then return end
     if mp.get_property('options/sid') ~= 'auto' then return end
     preload()
@@ -438,20 +504,24 @@ end
 -- are not caught as manual changes
 local file_is_loaded = false
 mp.register_event('file-loaded', function()
-    mp.add_timeout(0.5, function() file_is_loaded = true end)
+    mp.add_timeout(0.5, function()
+        file_is_loaded = true
+        script_sid = nil
+    end)
 end)
 mp.register_event('end-file', function() file_is_loaded = false end)
 
 mp.observe_property('track-list/count', 'number', read_track_list)
 
--- watch for manual sid changes and lock out auto-selection for the session
+-- remember manual sid changes for the rest of the session
 mp.observe_property('sid', 'string', function(_, val)
-    if script_is_setting_sid then return end
-    if not file_is_loaded then return end
-    if not session_override then
-        session_override = true
-        msg.info('manual subtitle change detected — disabling auto-selection for this session')
+    if not file_is_loaded or val == nil then return end
+    if val == script_sid then
+        script_sid = nil
+        return
     end
+    script_sid = nil
+    remember(mp.get_property_native('current-tracks/sub'))
 end)
 
 --force subtitle selection during playback
@@ -462,7 +532,7 @@ mp.register_script_message("sub-select", function(arg)
     if arg == "toggle" then ENABLED = not ENABLED
     elseif arg == "enable" then
         ENABLED = true
-        session_override = false
+        remembered = nil
     elseif arg == "disable" then ENABLED = false end
     local str = "sub-select: ".. (ENABLED and "enabled" or "disabled")
     mp.osd_message(str)
